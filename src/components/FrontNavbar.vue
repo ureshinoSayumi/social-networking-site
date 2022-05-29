@@ -2,14 +2,25 @@
   <nav class="menu">
     <div class="menu-container">
       <div class="menu-logo mt-2">
-        <h2 class="menu-logo">MetaWall</h2>
+        <router-link class="menu-logo" to="/posts" href="#">MetaWall</router-link>
       </div>
       <div class="menu-user mt-2">
         <div class="menu-user-icon">
-          <img src="https://upload.cc/i1/2022/04/20/d2R8pW.png" alt="">
+          <img v-if="$store.state.userInfo" :src="$store.state.userInfo.image" alt="">
         </div>
         <div class="menu-user-name mt-2 ms-2">
-          <h2>Member</h2>
+          <div class="dropdown">
+            <h2 class="dropdown-toggle" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">Member</h2>
+            <!-- <button class="btn btn-secondary dropdown-toggle" type="button"
+              id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+              Dropdown button
+            </button> -->
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+              <li><router-link v-if="$store.state.userInfo" :to="`/user/${$store.state.userInfo._id}`" class="dropdown-item">我的貼文牆</router-link></li>
+              <li><router-link to="/user" class="dropdown-item" href="#">修改個人資料</router-link></li>
+              <li><router-link @click="loginOut" to="/login" class="dropdown-item" href="#">登出</router-link></li>
+            </ul>
+          </div>
         </div>
       </div>
       <!--<ul class="menuUl" :class="isShow">
@@ -35,6 +46,10 @@ export default {
     showMenu () {
       this.isShow = this.isShow === 'show' ? '' : 'show'
       console.log(this.isShow)
+    },
+    loginOut () {
+      localStorage.setItem('test-token', '')
+      this.$store.commit('setUserInfo', null)
     }
   },
   mounted () {
@@ -74,7 +89,8 @@ export default {
   display:flex;
   align-items: center;
   justify-content: center;
-  h2 {
+  a {
+    text-decoration:none;
     text-align: center;
     font-family: 'Paytone One', sans-serif;
     font: normal normal normal 26px/36px Paytone One;
@@ -115,6 +131,8 @@ export default {
 }
 .menu-user-icon {
   img {
+    border-radius: 50%;
+    overflow: hidden;
     height: 30px;
     width: 30px;
   }

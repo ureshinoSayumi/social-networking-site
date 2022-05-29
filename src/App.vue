@@ -1,13 +1,22 @@
 <template>
   <FrontNavbar></FrontNavbar>
-  <router-view/>
+  <div class="trend-container">
+    <router-view/>
+    <ItemView
+      class="col-items"
+      v-if="true"
+    >
+    </ItemView>
+  </div>
 </template>
 <script>
 import FrontNavbar from './components/FrontNavbar.vue'
+import ItemView from './components/ItemView .vue'
 
 export default {
   components: {
-    FrontNavbar
+    FrontNavbar,
+    ItemView
     // FooterNavbar
   }
 }
@@ -76,52 +85,18 @@ table {
   border-collapse: collapse;
   border-spacing: 0;
 }
-// 通用class
-// .py-4 {
-//   padding-top: 1rem;
-//   padding-bottom: 1rem;
-// }
-// .px-6 {
-//   padding-left: 1.5rem;
-//   padding-right: 1.5rem;
-// }
-// .mr-2 {
-//   margin-right: 0.5rem;
-// }
-// .mr-4 {
-//   margin-right: 1rem;
-// }
-// .mr-4 {
-//   margin-right: 1rem;
-// }
-// .ml-2 {
-//   margin-left: 0.5rem;
-// }
-// .ml-4 {
-//   margin-left: 1rem;
-// }
-// .ml-6 {
-//   margin-left: 1.5rem;
-// }
-// .mt-4 {
-//   margin-top: 1rem;
-// }
-// .mb-4 {
-//   margin-bottom: 1rem;
-// }
-// .mb-5 {
-//   margin-bottom: 1.5rem;
-// }
-// .mb-6 {
-//   margin-bottom: 1.5rem;
-// }
-// .mb-8 {
-//   margin-bottom: 2rem;
-// }
-// .mt-1 {
-//   margin-top: 0.25rem;
-// }
-// .mt-2 {
-//   margin-top: 0.5rem;
-// }
+// 排版
+.trend-container {
+  max-width: 870px;
+  margin: auto;
+  margin-top: 49px;
+  display: flex;
+  justify-content: space-between;
+}
+.col-items {
+  // width: 257px;
+  height: 336px;
+  border: 2px solid black;
+  padding: 32px 24px;
+}
 </style>

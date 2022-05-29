@@ -13,9 +13,29 @@ const routes = [
     component: () => import('../views/LoginView.vue')
   },
   {
-    path: '/trend',
-    name: 'trend',
+    path: '/post/:id',
+    name: 'post',
     component: () => import('../views/TrendView.vue')
+  },
+  {
+    path: '/posts',
+    name: 'posts',
+    component: () => import('../views/TrendView.vue')
+  },
+  {
+    path: '/user/:id',
+    name: 'userId',
+    component: () => import('../views/UserWillView.vue')
+  },
+  {
+    path: '/user',
+    name: 'user',
+    component: () => import('../views/UserView.vue')
+  },
+  {
+    path: '/likes',
+    name: 'likes',
+    component: () => import('../views/LikesView.vue')
   },
   {
     path: '/about',

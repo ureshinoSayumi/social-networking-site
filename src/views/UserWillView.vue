@@ -116,8 +116,8 @@ export default {
     },
     getPost () {
       this.loading = true
-      console.log(`http://127.0.0.1:3005/post/${this.$route.params.id}`)
-      this.axios.get(`http://127.0.0.1:3005/post/${this.$route.params.id}`)
+      console.log(`http://127.0.0.1:3005/user/${this.$route.params.id}`)
+      this.axios.get(`http://127.0.0.1:3005/user/${this.$route.params.id}`)
         .then((response) => {
           this.allPost = response.data.data
           this.loading = false

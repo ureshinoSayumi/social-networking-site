@@ -23,36 +23,26 @@
 <script>
 export default {
   props: {
-    postData: {
-      type: Object,
-      default () { return {} }
-    },
-    loading: {
-      type: Boolean
-    }
   },
-  emits: ['get-all-data'],
+  emits: ['get-all-post'],
   data () {
     return {
       isLoad: false,
       fromData: {
-        user: this.$store.state.userInfo._id,
         content: null,
         image: null
       }
-      // postData: [],
     }
   },
   methods: {
     getAllData (sort, search) {
-      this.$emit('get-all-data', sort, search)
+      this.$emit('get-all-post', sort, search)
     },
     postPost () {
-      // console.log('asd')
       this.isLoad = true
       const data = this.fromData
       console.log(this.fromData, 'fromData')
-      this.axios.post('http://127.0.0.1:3005/post', data)
+      this.axios.post(`${process.env.VUE_APP_API}posts`, data)
         .then((response) => {
           console.log(response, 'post')
           this.isLoad = false
@@ -76,7 +66,7 @@ export default {
       }
       const formData = new FormData()
       formData.append('file-to-upload', this.$refs.fileInput.files[0])
-      this.axios.post('http://127.0.0.1:3005/upload', formData)
+      this.axios.post(`${process.env.VUE_APP_API}upload`, formData)
         .then((response) => {
           console.log(response, 'filterasd')
           this.fromData.image = response.data.imgUrl
@@ -88,12 +78,8 @@ export default {
     }
   },
   mounted () {
-    console.log(this.$store.state.userInfo._id, 'mounted')
   },
   watch: {
-    // postData () {
-    //   this.propsPostData = this.postData
-    // }
   }
 }
 </script>
@@ -129,19 +115,12 @@ p {
   background: #EEC32A 0% 0% no-repeat padding-box;
 }
 .card {
-  // height: 330px;
   border-radius: 8px;
   border: 2px solid black;
   box-shadow: 0px 3px 0px #000400;
   padding: 24px;
 }
-.card-user {
-  height: 45px;
-  display: flex;
-  // margin-bottom: 16px;
-}
 .card-post-text {
-  // text-align: center;
   display: block;
   width: 100%;
   border: 2px solid black;
@@ -162,8 +141,8 @@ p {
   background: #000400 0% 0% no-repeat padding-box;
   border: 0;
   input {
-    width: 1px;
-    height: 1px;
+    width: 0px;
+    height: 0px;
   }
 }
 .card-post-button {
@@ -180,7 +159,6 @@ p {
 .card-content-img {
   max-width: 100%;
   height: auto;
-  // border-radius: 0.5rem;
   border: 2px solid #000400;
   border-radius: 8px;
   aspect-ratio: 16 / 9;

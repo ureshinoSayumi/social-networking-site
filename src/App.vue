@@ -1,17 +1,20 @@
 <template>
-  <FrontNavbar></FrontNavbar>
-  <div class="trend-container">
-    <router-view/>
-    <ItemView
-      class="col-items"
-      v-if="true"
-    >
-    </ItemView>
+  <div>
+    <FrontNavbar></FrontNavbar>
+    <div :class="$route.name === 'login' ? '' : 'trend-container'">
+      <div :class="$route.name === 'login' ? '' : 'col-trend'">
+        <router-view/>
+      </div>
+      <ItemView
+        v-if="$route.name !== 'login'"
+      >
+      </ItemView>
+    </div>
   </div>
 </template>
 <script>
 import FrontNavbar from './components/FrontNavbar.vue'
-import ItemView from './components/ItemView .vue'
+import ItemView from './components/ItemView.vue'
 
 export default {
   components: {
@@ -93,10 +96,16 @@ table {
   display: flex;
   justify-content: space-between;
 }
-.col-items {
-  // width: 257px;
-  height: 336px;
-  border: 2px solid black;
-  padding: 32px 24px;
+.col-trend {
+  width: 533px;
+  margin-right: 1.5rem
+}
+@media (max-width:768px){
+  .trend-container {
+    padding: 0px 12px;
+  }
+  .col-trend {
+    margin: auto;
+  }
 }
 </style>

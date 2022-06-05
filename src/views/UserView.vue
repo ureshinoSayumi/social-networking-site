@@ -1,23 +1,17 @@
 <template>
-  <div class="col-trend me-4">
+  <div>
     <!-- 張貼文章 -->
     <div class="post-article">
       <h2 class="mt-3">修改個人資料</h2>
     </div>
 
     <div class="row-button px-3 mt-4">
-      <button
-        @click="changeTabs('name')"
-        :class="tabsState === 'name' ? 'active' : '' "
-        class="px-4 pt-2 pb-2"
-      >
+      <button :class="tabsState === 'name' ? 'active' : '' " class="px-4 pt-2 pb-2"
+         @click="changeTabs('name')" >
         暱稱修改
       </button>
-      <button
-        @click="changeTabs('password')"
-        :class="tabsState === 'password' ? 'active' : ''"
-        class="px-4 pt-2 pb-2"
-      >
+      <button :class="tabsState === 'password' ? 'active' : ''" class="px-4 pt-2 pb-2"
+        @click="changeTabs('password')">
         重設密碼
       </button>
     </div>
@@ -26,18 +20,21 @@
         <template v-if="tabsState === 'name'">
           <div class="card-user-icon-block mt-3 mx-auto">
             <div class="card-user-icon-img mx-auto">
-              <img :src="userUrl ? userUrl : fromData.image"/>
+              <img v-if="fromData.image" :src="userUrl ? userUrl : fromData.image" alt="">
+              <img v-else src="https://upload.cc/i1/2022/05/31/dVpHNT.png" alt="">
             </div>
             <label class="card-user-icon-label mt-3">
               上傳大頭貼
-                <input ref="fileInput" type="file" @input="fileReader">
+              <div v-if="isLoad" class="spinner-border spinner-border-sm" role="status"></div>
+              <input v-if="!isLoad" ref="fileInput" type="file" @input="fileReader">
             </label>
           </div>
           <div class="mt-2">
             <label class="card-post-label" for="name">暱稱</label>
-            <input class="card-post-input p-3 mt-1" id="name" v-model="fromData.name" type="text" placeholder="輸入暱稱">
+            <input class="card-post-input p-3 mt-1" id="name" v-model="fromData.name" type="text" placeholder="輸入暱稱"
+              @input="formatVerify()">
             <div v-if="state.name" class="wrong-msg mt-1">
-              <span>{{ state.name }}</span>
+              <span>{{ errorMessage.name }}</span>
             </div>
           </div>
           <div class="mt-3">
@@ -45,35 +42,39 @@
             <input class="me-2" id="male" type="radio" name="sex" value="male" v-model="fromData.sex">
             <label class="card-post-label me-3" for="male">男性</label>
             <input class="me-2" id="female" type="radio" name="sex" value="female" v-model="fromData.sex">
-            <label class="card-post-label me-2" for="female">女性</label>
+            <label class="card-post-label me-3" for="female">女性</label>
+            <input class="me-2" id="other" type="radio" name="sex" value="other" v-model="fromData.sex">
+            <label class="card-post-label me-3" for="other">其他</label>
+          </div>
+          <div class="mt-3">
+            <label class="card-user-label mb-1">權限</label>
+            <input class="me-2" id="GM" type="radio" name="auth" value="1" v-model="fromData.auth">
+            <label class="card-post-label me-3" for="GM">最高權限</label>
           </div>
           <button :disabled="isLoad" class="card-post-button mt-4 mx-auto" @click="patchUserData()">
             更改暱稱
-            <div class="spinner-border spinner-border-sm" role="status" v-if="isLoad">
-              <span class="visually-hidden">Loading...</span>
-            </div>
           </button>
         </template>
         <template v-else>
           <div class="mt-2">
             <label class="card-post-label" for="name">輸入新密碼</label>
-            <input class="card-post-input p-3 mt-1" id="name" v-model="fromData.password" type="password" placeholder="輸入密碼">
+            <input class="card-post-input p-3 mt-1" id="password" v-model="fromData.password" type="password" placeholder="輸入密碼"
+              @input="formatVerify(true)">
             <div v-if="state.password" class="wrong-msg mt-1">
-              <span>{{ state.password }}</span>
+              <span>{{ errorMessage.password }}</span>
             </div>
           </div>
           <div class="mt-2">
             <label class="card-post-label" for="name">再次輸入新密碼</label>
-            <input class="card-post-input p-3 mt-1" id="name" v-model="fromData.confirmPassword" type="password" placeholder="輸入密碼">
+            <input class="card-post-input p-3 mt-1" id="confirmPassword" v-model="fromData.confirmPassword" type="password" placeholder="再次輸入新密碼"
+              @input="formatVerify(true)" @keyup.enter="changePassword()">
             <div v-if="state.confirmPassword" class="wrong-msg mt-1">
-              <span>{{ state.confirmPassword }}</span>
+              <span>{{ errorMessage.confirmPassword }}</span>
             </div>
           </div>
           <button :disabled="isLoad" class="card-post-button mt-4 mx-auto" @click="changePassword()">
             更改密碼
-            <div class="spinner-border spinner-border-sm" role="status" v-if="isLoad">
-              <span class="visually-hidden">Loading...</span>
-            </div>
+            <div v-if="isLoad" class="spinner-border spinner-border-sm" role="status"></div>
           </button>
         </template>
       </div>
@@ -86,15 +87,21 @@ export default {
   data () {
     return {
       isLoad: false,
-      isPost: false,
       tabsState: 'name', // name or passwoed
       userUrl: null,
       fromData: {
         name: this.$store.state.userInfo.name,
         sex: this.$store.state.userInfo.sex,
         image: this.$store.state.userInfo.image,
-        password: null,
-        confirmPassword: null
+        password: '',
+        confirmPassword: '',
+        auth: ''
+      },
+      errorMessage: {
+        name: null,
+        passWord: null,
+        confirmPassword: null,
+        changeError: null
       },
       state: {
         name: null,
@@ -107,99 +114,110 @@ export default {
   },
   methods: {
     changePassword () {
-      if (this.fromData.password !== this.fromData.confirmPassword) {
-        this.state.password = '請輸入相同密碼'
-        this.state.confirmPassword = '請輸入相同密碼'
-        return
-      }
-      if (!this.fromData.password || !this.fromData.confirmPassword) {
-        this.state.password = '不得為空'
-        this.state.confirmPassword = '不得為空'
-        return
-      }
+      if (!this.formatVerify()) return
+      this.isLoad = true
       const data = this.fromData
       console.log(this.fromData, 'fromData')
-      this.axios.post('http://127.0.0.1:3005/users/updatePassword', data)
-        .then((response) => {
-          console.log(response, 'changePassword')
+      this.axios.post(`${process.env.VUE_APP_API}users/updatePassword`, data)
+        .then(() => {
           this.getUserData()
+          this.fromData = {
+            name: this.$store.state.userInfo.name,
+            sex: this.$store.state.userInfo.sex,
+            image: this.$store.state.userInfo.image,
+            password: '',
+            confirmPassword: '',
+            auth: ''
+          }
           this.isLoad = false
-          alert('傳送成功')
+          alert('修改成功')
         })
-        .catch((error) => {
-          console.log(error, 'changePassword')
+        .catch((errr) => {
           this.isLoad = false
-          alert('傳送失敗')
+          alert('修改失敗')
         })
     },
     patchUserData () {
-      if (!this.fromData.name) {
-        this.state.name = '不得為空'
-        return
-      }
+      if (!this.formatVerify()) return
+      this.isLoad = true
       const data = this.fromData
-      console.log(this.fromData, 'fromData')
-      this.axios.patch('http://127.0.0.1:3005/users/updateProfile', data)
-        .then((response) => {
-          console.log(response, 'patchUserData')
+      this.axios.patch(`${process.env.VUE_APP_API}users/updateProfile`, data)
+        .then(() => {
           this.getUserData()
+          this.fromData.password = ''
+          this.fromData.confirmPassword = ''
           this.isLoad = false
-          alert('傳送成功')
+          alert('修改成功')
         })
-        .catch((error) => {
-          console.log(error, 'patchUserData')
+        .catch(() => {
           this.isLoad = false
-          alert('傳送失敗')
+          alert('修改失敗')
         })
     },
     getUserData () {
-      this.axios.get('http://127.0.0.1:3005/users/profile')
+      this.axios.get(`${process.env.VUE_APP_API}users/profile`)
         .then((response) => {
-          console.log(response, 'router')
           this.$store.commit('setUserInfo', response.data.data.user)
         })
-        .catch((error) => {
+        .catch(() => {
           alert('token過期，請先登入')
-          console.log(error, 'error')
         })
     },
     changeTabs (str) {
       this.tabsState = str
     },
-    change () {
-      this.isPost = !this.isPost
-      console.log(this.isPost, 'asdasd')
-    },
     fileReader () {
-      // 解析上傳的檔案，讓 <img> 能即時顯示上傳的圖片
-      console.log(this.$refs.fileInput)
+      this.isLoad = true
       if (this.$refs.fileInput.files[0].type !== 'image/jpeg' && this.$refs.fileInput.files[0].type !== 'image/png') {
         alert('僅支援 jpg、png 檔，請重新上傳！')
         // return
       }
       const formData = new FormData()
       formData.append('file-to-upload', this.$refs.fileInput.files[0])
-      this.axios.post('http://127.0.0.1:3005/upload', formData)
+      this.axios.post(`${process.env.VUE_APP_API}upload`, formData)
         .then((response) => {
           console.log(response, 'filterasd')
           this.userUrl = response.data.imgUrl
           this.fromData.image = response.data.imgUrl
+          this.isLoad = false
         })
-        .catch((error) => {
-          console.log(error, 'filter')
+        .catch(() => {
+          alert('上傳失敗')
         })
+    },
+    formatVerify (singUp) {
+      /* eslint-disable no-useless-escape */
+      /* eslint-disable no-unneeded-ternary */
+      const regExpPassword = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/
+      const error = []
+
+      for (const i in this.state) {
+        this.state[i] = false
+      }
+      if (this.fromData.name.length < 2) {
+        this.state.name = true
+        this.errorMessage.name = '暱稱至少 2 個字元以上'
+        error.push('name')
+      }
+      if (!regExpPassword.test(this.fromData.password) && singUp) {
+        this.errorMessage.password = '密碼需至少 8 碼以上，並中英混合'
+        this.state.password = true
+        error.push('signUpError')
+      }
+      if ((this.fromData.confirmPassword !== this.fromData.password || !this.fromData.confirmPassword) && singUp) {
+        this.errorMessage.confirmPassword = '與密碼不同'
+        this.state.confirmPassword = true
+        error.push('confirmPassword')
+      }
+      return error.length === 0
     }
   },
   mounted () {
-    console.log(this.$store.state.userInfo, 'mounted')
   }
 }
 </script>
 
 <style lang="scss" scoped>
-.col-trend {
-  width: 533px;
-}
 // 張貼文章
 .post-article {
   height: 64px;
@@ -221,8 +239,6 @@ p {
   border: 2px solid black;
 }
 .nav-link {
-  // background: black;
-  // color: white;
   border-radius: 8px;
   border: 2px solid black;
   border-bottom: 0;
@@ -232,17 +248,11 @@ p {
   border-bottom: 0;
 }
 .card {
-  // height: 330px;
   border-radius: 8px;
   border: 2px solid black;
   box-shadow: 0px 3px 0px #000400;
   padding: 24px;
 }
-
-// .card-user {
-//   height: 45px;
-//   display: flex;
-// }
 .card-user-icon-block {
   width: 128px;
 }
@@ -268,8 +278,8 @@ p {
   background: #000400 0% 0% no-repeat padding-box;
   border: 0;
   input {
-    width: 1px;
-    height: 1px;
+    width: 0px;
+    height: 0px;
   }
 }
 .card-post-text {

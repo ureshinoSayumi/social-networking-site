@@ -1,25 +1,34 @@
 <template>
-  <div class="col-trend me-4">
+  <div>
     <div class="likes-title">
       <h2 class="mt-3">我按讚的貼文</h2>
     </div>
     <div class="likes-block border-radius mt-3"
       v-for="like in allLikes" :key="like._id">
       <div class="content">
-        <img class="mt-1" :src="like.user.image" alt="">
-        <div class="user ms-3">
-          <p class="name">{{ like.user.name }}</p>
-          <p class="date">發文時間 {{ formatDate(like.createdAt) }}</p>
-        </div>
-        <div class="like-block ms-5" @click="clearLike(like)">
-          <i class="bi bi-hand-thumbs-up icon ms-1"></i>
-          <p class="text">取消</p>
-        </div>
-        <div class="like-block ms-4">
-          <router-link :to="`/post/${like._id}`" href="#">
-            <i class="bi bi-arrow-right-circle icon ms-1"></i>
-            <p class="text">查看</p>
+        <div class="user-block ms-3">
+          <router-link :to="`/user/${like.user._id}`" href="#">
+            <img v-if="like.user.image" class="mt-1" :src="like.user.image" alt="">
+            <img v-else class="mt-1" src="https://upload.cc/i1/2022/05/31/dVpHNT.png" alt="">
           </router-link>
+          <div class="user ms-3">
+            <router-link :to="`/user/${like.user._id}`" href="#">
+              <p class="name">{{ like.user.name }}</p>
+            </router-link>
+            <p class="date">發文時間 {{ formatDate(like.createdAt) }}</p>
+          </div>
+        </div>
+        <div class="user-block me-3">
+          <div class="like-block ms-5" @click="clearLike(like)">
+            <i class="bi bi-hand-thumbs-up icon ms-1"></i>
+            <p class="text">取消</p>
+          </div>
+          <div class="like-block ms-4">
+            <router-link :to="`/post/${like._id}`" href="#">
+              <i class="bi bi-arrow-right-circle icon ms-1"></i>
+              <p class="text">查看</p>
+            </router-link>
+          </div>
         </div>
       </div>
     </div>
@@ -30,16 +39,15 @@
 export default {
   data () {
     return {
-      data: ['s'],
       allLikes: []
     }
   },
   methods: {
     getUserLike () {
-      this.axios.get('http://127.0.0.1:3005/users/getLikeList')
+      this.axios.get(`${process.env.VUE_APP_API}users/getLikeList`)
         .then((response) => {
-          console.log(response, 'getUserLike')
-          this.allLikes = response.data.likeList
+          this.allLikes = response.data.data
+          console.log(this.allLikes, 'this.allLikes')
         })
         .catch((error) => {
           alert('token過期，請先登入')
@@ -48,11 +56,10 @@ export default {
     },
     clearLike (like) {
       console.log(like._id)
-      this.axios.delete(`http://127.0.0.1:3005/post/${like._id}/deleteLikes`)
+      this.axios.delete(`${process.env.VUE_APP_API}post/${like._id}/unlike`)
         .then((response) => {
           console.log(response, 'post')
           this.getUserLike()
-          alert('收回成功')
         })
         .catch((error) => {
           console.log(error, 'post')
@@ -76,8 +83,9 @@ export default {
 p {
   margin: 0;
 }
-.col-trend {
-  width: 533px;
+a {
+  text-decoration: none;
+  color: #000000;
 }
 .likes-title {
   height: 64px;
@@ -98,16 +106,17 @@ p {
   justify-content: center;
   align-items: center;
   .content {
+    width: 100%;
     display: flex;
-    // justify-content: space-between;
+    justify-content: space-between;
     img {
       border-radius: 50%;
       overflow: hidden;
       height: 40px;
       width: 40px;
     }
-    .user {
-      width: 290px;
+    .user-block {
+      display: flex;
     }
     .icon {
       font-size: 1.2rem;

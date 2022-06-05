@@ -18,9 +18,9 @@ router.beforeEach((to, from, next) => {
   if (localStorage.getItem('test-token')) {
     const token = 'Bearer' + ' ' + localStorage.getItem('test-token')
     axios.defaults.headers.common.Authorization = token
-    axios.get('http://127.0.0.1:3005/users/profile')
+    axios.get(`${process.env.VUE_APP_API}users/profile`)
       .then((response) => {
-        // console.log(response, 'router')
+        console.log(response, '驗證')
         store.commit('setUserInfo', response.data.data.user)
         next()
       })

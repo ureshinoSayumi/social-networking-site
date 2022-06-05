@@ -1,88 +1,52 @@
 <template>
-    <div class="col-trend me-4">
-      <!-- 搜尋 -->
-      <div class="row-menu" v-if="!$store.state.switch">
-        <div class="col-select">
-          <select class="select" v-model="filter" @change="getAllPost(filter, searchPost)">
-            <option value="">最新貼文</option>
-            <option value="asc">最舊貼文</option>
-          </select>
-        </div>
-        <div class="col-serch-input">
-          <input class="serch-input" v-model="searchPost" type="text" placeholder="搜尋貼文">
-          <button class="serch-button" @click="getAllPost(filter, searchPost)">
-            <i class="bi bi-search" style="font-size: 1.7rem;"></i>
-          </button>
-        </div>
+  <div>
+    <!-- 搜尋 -->
+    <div class="row-menu" v-if="!$store.state.switch">
+      <div class="col-select">
+        <select class="select" v-model="filter" @change="getAllPost(filter, searchPost)">
+          <option class="option" value="">最新貼文</option>
+          <option value="asc">最舊貼文</option>
+        </select>
       </div>
-      <!-- 動態牆 -->
-      <TrendWallView
-        v-if="!$store.state.switch"
-        :postData="allPost"
-        :loading="loading"
-        @get-all-data="getAllPost"
-      >
-      </TrendWallView>
-      <!-- 送出貼文 -->
-      <SendPostView
-        v-if="$store.state.switch"
-        @get-all-data="getAllPost"
-      >
-      </SendPostView>
-      <!-- 如果沒有貼文 -->
-      <div class="card mt-3" v-if="!allPost.length">
-        <div class="card-stand">
-        </div>
-        <div class="card-stand-block mx-auto">
-          <p class="card-stand-p mt-4 mb-2">目前尚無動態，新增一則貼文吧！</p>
-        </div>
+      <div class="col-serch-input">
+        <input class="serch-input" v-model="searchPost" type="text" placeholder="搜尋貼文">
+        <button class="serch-button" @click="getAllPost(filter, searchPost)">
+          <i class="bi bi-search" style="font-size: 1.7rem;"></i>
+        </button>
       </div>
-
     </div>
-    <!-- 右側工具 -->
-    <!--<ItemView
-      v-if="false"
-      @change-state="change"
+    <!-- 動態牆 -->
+    <TrendWallView
+      v-if="!$store.state.switch"
+      :postData="allPost"
+      :loading="loading"
+      @get-all-post="getAllPost"
     >
-    </ItemView> -->
-    <!-- <ul class="col-items">
-      <li>
-        <button class="button mb-4" @click="isPost = !isPost">張貼動態</button>
-      </li>
-      <li class="col-item-item mb-4">
-        <div class="card-user-icon">
-          <img src="https://upload.cc/i1/2022/04/20/d2R8pW.png" alt="">
-          <span class="ms-3">{{ $store.state.userInfo.name }}</span>
-        </div>
-      </li>
-      <li class="col-item-item mb-4">
-        <div class="card-user-icon">
-          <div class="card-user-icon-border">
-            <i class="bi bi-bell" style="font-size: 1.5rem;"></i>
-          </div>
-          <span class="ms-3">追蹤名單</span>
-        </div>
-      </li>
-      <li class="col-item-item mb-4">
-        <div class="card-user-icon">
-          <div class="card-user-icon-border">
-            <i class="bi bi-hand-thumbs-up" style="font-size: 1.5rem;"></i>
-          </div>
-          <span class="ms-3">我按讚的文章</span>
-        </div>
-      </li>
-    </ul> -->
+    </TrendWallView>
+    <!-- 送出貼文 -->
+    <SendPostView
+      v-if="$store.state.switch"
+      @get-all-post="getAllPost"
+    >
+    </SendPostView>
+    <!-- 如果沒有貼文 -->
+    <div class="card mt-3" v-if="!allPost.length">
+      <div class="card-stand">
+      </div>
+      <div class="card-stand-block mx-auto">
+        <p class="card-stand-p mt-4 mb-2">目前尚無動態，新增一則貼文吧！</p>
+      </div>
+    </div>
+  </div>
 </template>
 <script>
 import TrendWallView from '../components/TrendWallView.vue'
 import SendPostView from '../components/SendPostView.vue'
-// import ItemView from '../components/ItemView .vue'
 
 export default {
   components: {
     TrendWallView,
     SendPostView
-    // ItemView
   },
   data () {
     return {
@@ -92,22 +56,34 @@ export default {
       // select
       filter: '',
       allPost: [],
-      loading: null
+      loading: null,
+      page: 2,
+      scrollEvent: null
     }
   },
   methods: {
-    getAllPost (sort = '-createdAt', search = '') {
+    getAllPost (sort = '-createdAt', search = '', page = 1, scroll = false) {
+      if (this.loading) return
       this.loading = true
       const filter = {
         sort: `?timeSort=${sort}`,
-        search: `&q=${search}`
+        search: `&q=${search}`,
+        page: `&page=${page}`
       }
-      console.log(`http://127.0.0.1:3005/posts${filter.sort}${filter.search}`)
-      this.axios.get(`http://127.0.0.1:3005/posts${filter.sort}${filter.search}`)
+      this.axios.get(`${process.env.VUE_APP_API}posts${filter.sort}${filter.search}${filter.page}`)
         .then((response) => {
-          this.allPost = response.data.data
+          if (scroll) {
+            if (!response.data.data.length) {
+              window.removeEventListener('scroll', this.scrollEvent)
+            }
+            this.page += 1
+            const temp = this.allPost.concat(response.data.data)
+            this.allPost = temp
+          } else {
+            this.allPost = response.data.data
+            this.page = 2
+          }
           this.loading = false
-          console.log('this.loading')
         })
         .catch((error) => {
           this.loading = false
@@ -116,108 +92,88 @@ export default {
     },
     getPost () {
       this.loading = true
-      console.log(`http://127.0.0.1:3005/post/${this.$route.params.id}`)
-      this.axios.get(`http://127.0.0.1:3005/post/${this.$route.params.id}`)
+      this.axios.get(`${process.env.VUE_APP_API}posts/${this.$route.params.id}`)
         .then((response) => {
           this.allPost = response.data.data
           this.loading = false
-          console.log(response, 'this.loading')
         })
         .catch((error) => {
           this.loading = false
           console.log(error, 'getAllPost')
         })
+    },
+    buildThrottle () {
+      function throttle (fn, delay) {
+        let last = 0
+        return function (...args) {
+          const now = Date.now()
+          if (now - last > delay) {
+            last = now
+            fn.apply(this, args)
+          }
+        }
+      }
+      const throttleTask = throttle(this.getAllPost, 1000)
+      this.scrollEvent = () => {
+        const isBottom = window.scrollY + window.innerHeight >= document.body.offsetHeight - 100
+        if (isBottom) {
+          throttleTask(this.filter, this.searchPost, this.page, true)
+        }
+      }
+    },
+    buildScrollEvent () {
+      this.buildThrottle()
+      window.addEventListener('scroll', this.scrollEvent)
     }
   },
   mounted () {
-    // /user/6284acfbb7bb2d7a226ec064
-    console.log(this.$route.params.id, ' this.$route.params;')
     if (this.$route.params.id) {
       this.getPost()
     } else {
       this.getAllPost()
     }
+    this.buildScrollEvent()
   },
-  watch: {
-    $route () {
-      console.log(this.$route.params, 'watch Te')
-      if (this.$route.params.id) {
-        this.getPost()
-      } else {
-        this.getAllPost()
-      }
-      // this.propsPostData = this.postData
-    }
+  beforeUnmount () {
+    window.removeEventListener('scroll', this.scrollEvent)
   }
 }
 </script>
 
 <style lang="scss" scoped>
-.trend-container {
-  max-width: 870px;
-  margin: auto;
-  margin-top: 49px;
-  display: flex;
-  justify-content: space-between;
-}
-.col-trend {
-  width: 533px;
-}
 // menu
 .row-menu {
   width: 100%;
   display: flex;
-  justify-content: space-between;
-  .col-select {
-    width: 156px;
-  }
-  .col-serch-input {
-    border: 2px solid black;
-    width: 365px;
-    display: flex;
-  }
-  .serch-input {
-    width: 100%;
-    padding: 0px 16px;
-    border: 0;
-    border-right: 2px solid black;
-  }
-  .serch-button {
-    // width: 46px;
-    // min-width: 42px;
-    border: 0;
-    color: #FFFFFF;
-    background: #03438D;
-  }
-  .serch-button-icon {
-    background: #FFFFFF;
-  }
+  justify-content: space-between
+}
+.col-select {
+  width: 156px;
+  margin-right: 12px;
+}
+.col-serch-input {
+  border: 2px solid black;
+  border-right: 0;
+  width: 365px;
+  display: flex;
+}
+.serch-input {
+  width: 100%;
+  padding: 0px 16px;
+  border: 0;
+  border-right: 2px solid black;
+}
+.serch-button {
+  border: 0;
+  color: #FFFFFF;
+  background: #03438D;
 }
 .select {
   width: 100%;
   padding: 11px 16px;
   border: 2px solid black;
+  background: white;
   font: normal normal normal 16px/19px Azeret Mono;
-}
-
-.card-user-icon {
-  img {
-    height: 45px;
-    width: 45px;
-  }
-  font: normal normal bold 16px/24px Noto Sans TC;
-  display: flex;
-  align-items: center;
-}
-.card-user-icon-border {
-  width: 45px;
-  height: 45px;
-  border-radius: 99em;
-  border: 2px solid black;
-  background: #E2EDFA 0% 0% no-repeat padding-box;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 .button {
   height: 54px;
@@ -234,12 +190,6 @@ export default {
   color: black;
   background: #EEC32A 0% 0% no-repeat padding-box;
 }
-.col-items {
-  // width: 257px;
-  height: 336px;
-  border: 2px solid black;
-  padding: 32px 24px;
-}
 // 如果沒有貼文
 .card {
   border-radius: 8px;
@@ -252,12 +202,21 @@ export default {
   border-bottom: 2px solid black;
 }
 .card-stand-block {
-  // border: 0;
-  // text-align: center;
-  // margin: auto;
   font: normal normal normal 16px/24px Noto Sans TC;
 }
 .card-stand-p {
   color: #9B9893;
+}
+@media (max-width:768px){
+  .row-menu {
+    flex-direction: column;
+  }
+  .col-select {
+    width: 100%;
+  }
+  .col-serch-input {
+    width: 100%;
+    margin-top: 1rem;
+  }
 }
 </style>

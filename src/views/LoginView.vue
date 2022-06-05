@@ -13,37 +13,37 @@
             </div>
             <div class="login-input">
               <div class="mb-3" v-if="isRegister">
-                <input v-model="user.name" type="text" placeholder="Name">
+                <input @input="formatVerify(true)" v-model="user.name" type="text" placeholder="Name">
                 <div v-if="state.name" class="wrong-msg mt-1">
-                  <span>暱稱至少 2 個字元以上</span>
+                  <span>{{ errorMessage.name }}</span>
                 </div>
               </div>
               <div class="mb-3">
-                <input v-model="user.email" type="text" placeholder="Email">
+                <input @input="formatVerify()" @keyup.enter="login" v-model="user.email" type="text" placeholder="Email">
                 <div v-if="state.email" class="wrong-msg mt-1">
-                  <span>帳號已被註冊，請替換新的 Email！</span>
+                  <span>{{ errorMessage.email }}</span>
                 </div>
               </div>
               <div class="mb-3">
-                <input @keyup.enter="login" v-model="user.password" type="password" name="" id=" " placeholder="Password">
+                <input @input="formatVerify()" @keyup.enter="login" v-model="user.password" type="password" name="" id=" " placeholder="Password">
                 <div v-if="state.password" class="wrong-msg mt-1">
-                  <span>密碼需至少 8 碼以上，並中英混合</span>
+                  <span>{{ errorMessage.password }}</span>
                 </div>
               </div>
               <div class="mb-3" v-if="isRegister">
-                <input v-model="user.confirmPassword" type="password" placeholder="再次輸入密碼">
+                <input @input="formatVerify(true)" v-model="user.confirmPassword" type="password" placeholder="再次輸入密碼">
                 <div v-if="state.confirmPassword" class="wrong-msg mt-1">
-                  <span>與密碼不同</span>
+                  <span>{{ errorMessage.confirmPassword }}</span>
                 </div>
               </div>
             </div>
-            <div v-if="state.loginError" class="wrong-msg">
-              <span>帳號或密碼錯誤，請重新輸入！</span>
+            <div v-if="errorMessage.loginError" class="wrong-msg">
+              <span>{{ errorMessage.loginError }}</span>
             </div>
             <div class="btn-block">
               <div class="save-passWord-block">
-                <input placeholder="是否記憶帳密" class="me-2 mt-1" id="male" type="checkbox" value="true" v-model="savePassWord">
-                <label class="card-post-label me-3" for="male">是否記憶帳密</label>
+                <input placeholder="記住我" class="me-2 mt-1" id="male" type="checkbox" value="true" v-model="savePassWord">
+                <label class="card-post-label me-3" for="male">記住我</label>
               </div>
               <template v-if="isRegister">
                 <button @click="singUp" type="button" class="btn-login" :class="isSignup ? 'btn-error' : '' ">
@@ -80,11 +80,18 @@ export default {
   name: 'HomeView',
   data () {
     return {
+      errorMessage: {
+        name: null,
+        email: null,
+        passWord: null,
+        signUpError: null,
+        confirmPassword: null,
+        loginError: null
+      },
       state: {
         name: false,
         email: false,
         passWord: false,
-        loginError: false,
         signUpError: false,
         confirmPassword: false
       },
@@ -101,37 +108,47 @@ export default {
     }
   },
   methods: {
-    formatVerify () {
+    formatVerify (singUp) {
       const error = []
       /* eslint-disable no-useless-escape */
       /* eslint-disable no-unneeded-ternary */
       const regExpEmail = /^([a-zA-Z0-9_\.\-\+])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/
+      const regExpPassword = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/
+      for (const i in this.state) {
+        this.state[i] = false
+      }
+      if (this.user.name.length < 2 && singUp) {
+        this.state.name = true
+        this.errorMessage.name = '暱稱至少 2 個字元以上'
+        error.push('name')
+      }
       if (!regExpEmail.test(this.user.email)) {
+        this.errorMessage.email = 'Email 格式錯誤'
         this.state.email = true
         error.push('email')
       }
-      if (this.user.password.length < 8) {
+      if (!this.user.email) {
+        this.errorMessage.email = 'Email 未輸入'
+        this.state.email = true
+        error.push('email2')
+      }
+      if (!regExpPassword.test(this.user.password)) {
+        this.errorMessage.password = '密碼需至少 8 碼以上，並中英混合'
         this.state.password = true
         error.push('signUpError')
       }
-      if (!this.user.name) {
-        this.state.name = true
-        error.push('name')
-      }
-      if (this.user.confirmPassword !== this.user.password) {
+      if ((this.user.confirmPassword !== this.user.password || !this.user.confirmPassword) && singUp) {
+        this.errorMessage.confirmPassword = '與密碼不同'
         this.state.confirmPassword = true
         error.push('confirmPassword')
       }
       return error.length === 0
     },
     login () {
-      // if (!this.formatVerify()) {
-      //   console.log('認證不過')
-      //   return
-      // }
+      if (!this.formatVerify()) return
       this.loading = true
       console.log(this.user)
-      this.axios.post('http://127.0.0.1:3005/sing_in', this.user)
+      this.axios.post(`${process.env.VUE_APP_API}users/sign_in`, this.user)
         .then((response) => {
           localStorage.setItem('test-token', response.data.user.token)
           console.log(response, 'user')
@@ -145,30 +162,34 @@ export default {
         })
         .catch((error) => {
           this.loading = false
-          console.log(error.message, 'getAllPost')
+          this.errorMessage.loginError = error.response.data.message
+          console.log(error.response, 'getAllPost')
         })
     },
     singUp () {
-      if (!this.formatVerify()) {
-        console.log('認證不過')
-        return
-      }
+      if (!this.formatVerify(true)) return
       this.loading = true
-      this.axios.post('http://127.0.0.1:3005/sing_up', this.user)
+      this.axios.post(`${process.env.VUE_APP_API}user/sign_up`, this.user)
         .then((response) => {
           localStorage.setItem('test-token', response.data.user.token)
           console.log(response, 'user')
           this.$router.push('/posts')
           this.loading = false
-          // this.$router.push('/trend')
         })
         .catch((error) => {
           this.loading = false
-          console.log(error, 'getAllPost')
+          this.errorMessage.loginError = error.response.data.message
+          console.log(error.response, 'getAllPost')
         })
     },
     checkButton () {
       this.isRegister = !this.isRegister
+      this.user = {
+        name: '',
+        email: '',
+        password: '',
+        confirmPassword: ''
+      }
       for (const i in this.state) {
         this.state[i] = false
       }
@@ -179,13 +200,6 @@ export default {
     if (localStorage.getItem('tempPassWord')) {
       this.user = JSON.parse(localStorage.getItem('tempPassWord'))
     }
-    // this.axios.get('https://calm-dawn-74154.herokuapp.com/todos')
-    //   .then((response) => {
-    //     console.log(response, 'asdf')
-    //   })
-    //   .catch((error) => {
-    //     console.log(error, 'error')
-    //   })
   }
 }
 </script>

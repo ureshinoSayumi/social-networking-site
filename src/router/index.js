@@ -1,12 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
 
 const routes = [
-  {
-    path: '/home',
-    name: 'home',
-    component: HomeView
-  },
   {
     path: '/login',
     name: 'login',
@@ -24,7 +18,7 @@ const routes = [
   },
   {
     path: '/user/:id',
-    name: 'userId',
+    name: 'single-user',
     component: () => import('../views/UserWillView.vue')
   },
   {
@@ -36,6 +30,11 @@ const routes = [
     path: '/likes',
     name: 'likes',
     component: () => import('../views/LikesView.vue')
+  },
+  {
+    path: '/following',
+    name: 'following',
+    component: () => import('../views/FollowingView.vue')
   },
   {
     path: '/about',

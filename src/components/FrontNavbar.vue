@@ -4,32 +4,22 @@
       <div class="menu-logo mt-2">
         <router-link class="menu-logo" to="/posts" href="#">MetaWall</router-link>
       </div>
-      <div class="menu-user mt-2">
+      <div v-if="$store.state.userInfo" class="menu-user mt-2">
         <div class="menu-user-icon">
-          <img v-if="$store.state.userInfo" :src="$store.state.userInfo.image" alt="">
+          <img v-if="$store.state.userInfo.image" :src="$store.state.userInfo.image" alt="">
+          <img v-else src="https://upload.cc/i1/2022/05/31/dVpHNT.png" alt="">
         </div>
         <div class="menu-user-name mt-2 ms-2">
           <div class="dropdown">
             <h2 class="dropdown-toggle" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">Member</h2>
-            <!-- <button class="btn btn-secondary dropdown-toggle" type="button"
-              id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-              Dropdown button
-            </button> -->
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-              <li><router-link v-if="$store.state.userInfo" :to="`/user/${$store.state.userInfo._id}`" class="dropdown-item">我的貼文牆</router-link></li>
+              <li><router-link :to="`/user/${$store.state.userInfo._id}`" class="dropdown-item">我的貼文牆</router-link></li>
               <li><router-link to="/user" class="dropdown-item" href="#">修改個人資料</router-link></li>
               <li><router-link @click="loginOut" to="/login" class="dropdown-item" href="#">登出</router-link></li>
             </ul>
           </div>
         </div>
       </div>
-      <!--<ul class="menuUl" :class="isShow">
-        <li><router-link to="/trend2">動態牆2</router-link></li>
-        <li><router-link to="/trend">動態牆</router-link></li>
-        <li><router-link to="/login">登入</router-link></li>
-        <li><a href="">價格</a></li>
-        <li><a href="">優惠卷</a></li>
-      </ul>-->
       <h2 @click="showMenu" class="menuH2">menu</h2>
     </div>
   </nav>
@@ -61,17 +51,9 @@ export default {
 <style lang="scss" scoped>
 @import url('https://fonts.googleapis.com/css2?family=Azeret+Mono&family=Noto+Sans+TC:wght@400;500;700&family=Paytone+One&display=swap');
 
-// body {
-//   line-height: 1;
-//   max-width: 1024px;
-//   margin: auto;
-// }
 .menu {
   height: 58px;
   border-bottom: 2px solid black;
-  img {
-    width: 300px;
-  }
 }
 .menu-container {
   max-width: 870px;
@@ -120,12 +102,6 @@ export default {
   display: flex;
   flex-wrap: wrap;
 }
-.card {
-  width: 25%;
-  img {
-    width: 100%;
-  }
-}
 .menu-user {
   display: flex;
 }
@@ -141,26 +117,9 @@ export default {
   align-items: center;
 }
 @media (max-width:768px){
-  .card{
-    width: 50%;
-  }
-  .menu h2{
-    display: block;
-  }
-  .menuUl{
-    flex-direction: column;
-    text-align: center;
-    overflow: hidden;
-    transition:  2.3s;
-    max-height: 0px;
-    position: absolute;
-    top:62.3px;
-    right: 0;
-    left: 0;
-    background: cornflowerblue;
-  }
-  .show {
-    max-height: 500px;
+  .menu {
+    padding-left: 12px;
+    padding-right: 12px;
   }
 }
 </style>

@@ -133,7 +133,7 @@ export default {
         error.push('email2')
       }
       if (!regExpPassword.test(this.user.password)) {
-        this.errorMessage.password = '密碼需至少 8 碼以上，並中英混合'
+        this.errorMessage.password = '密碼需至少 8 碼以上，並數字英文混合'
         this.state.password = true
         error.push('signUpError')
       }
